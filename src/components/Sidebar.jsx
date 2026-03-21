@@ -7,7 +7,8 @@ import {
     Users,
     Wallet,
     Bell,
-    LogOut
+    LogOut,
+    UserPlus
 } from 'lucide-react';
 
 export default function Sidebar() {
@@ -26,6 +27,10 @@ export default function Sidebar() {
         { path: '/finanzas', icon: Wallet, label: 'Finanzas & Recibos' },
         { path: '/notificaciones', icon: Bell, label: 'Notificaciones' },
     ];
+
+    if (user?.rol === 'ROLE_ADMIN') {
+        menuItems.push({ path: '/registro', icon: UserPlus, label: 'Crear Colega' });
+    }
 
     return (
         <aside className="sidebar">
