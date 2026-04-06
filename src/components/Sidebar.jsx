@@ -59,7 +59,7 @@ export default function Sidebar() {
             <div className="sidebar-footer">
                 <div className="mb-4 px-2">
                     <p className="text-sm font-bold truncate">
-                        {user?.profesionalNombre} {user?.profesionalApellido}
+                        {user?.nombreCompleto}
                     </p>
                     <p className="text-xs text-muted truncate">
                         {user?.username}

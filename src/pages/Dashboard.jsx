@@ -48,7 +48,7 @@ export default function Dashboard() {
                 if (!fecha) return '';
                 if (Array.isArray(fecha)) {
                     const [y, m, day] = fecha;
-                    return `${y}-${String(m).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+                    return `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 }
                 return String(fecha).substring(0, 10);
             };
@@ -61,8 +61,8 @@ export default function Dashboard() {
             const turnosDelDiaNormalized = turnosDelDia.map(t => ({
                 ...t,
                 fecha: normalizeFecha(t.fecha),
-                horaComienzo: Array.isArray(t.horaComienzo) ? t.horaComienzo.slice(0,2).map(n=>String(n).padStart(2,'0')).join(':') : String(t.horaComienzo).substring(0,5),
-                horaFin: Array.isArray(t.horaFin) ? t.horaFin.slice(0,2).map(n=>String(n).padStart(2,'0')).join(':') : String(t.horaFin).substring(0,5),
+                horaComienzo: Array.isArray(t.horaComienzo) ? t.horaComienzo.slice(0, 2).map(n => String(n).padStart(2, '0')).join(':') : String(t.horaComienzo).substring(0, 5),
+                horaFin: Array.isArray(t.horaFin) ? t.horaFin.slice(0, 2).map(n => String(n).padStart(2, '0')).join(':') : String(t.horaFin).substring(0, 5),
             }));
             setTurnosHoy(turnosDelDiaNormalized);
 
@@ -102,7 +102,7 @@ export default function Dashboard() {
         <div>
             <div className="page-header">
                 <div>
-                    <h1 className="page-title">Hola, {user?.profesionalNombre} 👋</h1>
+                    <h1 className="page-title">Hola, {user?.nombreCompleto} 👋</h1>
                     <p className="page-subtitle">Este es el resumen de tu consultorio de hoy.</p>
                 </div>
             </div>

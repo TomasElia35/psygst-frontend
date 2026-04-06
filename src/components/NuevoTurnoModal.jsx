@@ -24,11 +24,11 @@ export default function NuevoTurnoModal({ onClose, selectedSlot, selectedEvent, 
         // Separamos para evitar problemas de zona horaria al crear el objeto Date
         const [year, month, day] = fechaStr.split('-').map(Number);
         const date = new Date(year, month - 1, day);
-        
+
         // Obtenemos el nombre del día
         const diaSemana = new Intl.DateTimeFormat('es-ES', { weekday: 'long' }).format(date);
         const diaCapitalizado = diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1);
-        
+
         // Retornamos Martes 07-04-2026
         return `${diaCapitalizado} ${day.toString().padStart(2, '0')}-${month.toString().padStart(2, '0')}-${year}`;
     };
@@ -61,8 +61,8 @@ export default function NuevoTurnoModal({ onClose, selectedSlot, selectedEvent, 
                     const fechaFormateada = formatFechaMensaje(formData.fecha);
                     const horaFormateada = `${formData.horaComienzo}hs`;
 
-                    const text = `✅ Hola ${paciente.nombre}! Su turno fue confirmado para el ${fechaFormateada} a las ${horaFormateada}. Modalidad: ${formData.modalidad}. Importe: $${formData.precioFinal}. Solamente puede cancelar antes de las 48hs de la fecha del turno. ¡Nos vemos!\nProfesional: ${user?.profesionalNombre || ''}`;
-                    
+                    const text = `✅ Hola ${paciente.nombre}! Su turno fue confirmado para el ${fechaFormateada} a las ${horaFormateada}. Modalidad: ${formData.modalidad}. Importe: $${formData.precioFinal}. Solamente puede cancelar antes de las 48hs de la fecha del turno. ¡Nos vemos!\nProfesional: ${user?.nombreCompleto || ''}`;
+
                     const phone = paciente.celular.replace(/\D/g, '');
                     const url = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
                     window.open(url, '_blank');
@@ -103,7 +103,7 @@ export default function NuevoTurnoModal({ onClose, selectedSlot, selectedEvent, 
         try {
             await api.patch(`/turnos/${selectedEvent.uuid}/estado`, { estado: 'CANCELADO' });
             toast.success('Turno cancelado.');
-            
+
             const paciente = pacientes.find(p => p.uuid === selectedEvent.pacienteUuid);
             if (paciente && paciente.celular) {
                 const fechaFormateada = formatFechaMensaje(selectedEvent.fecha);
