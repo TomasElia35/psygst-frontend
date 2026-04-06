@@ -19,9 +19,22 @@ export default function NuevoTurnoModal({ onClose, selectedSlot, selectedEvent, 
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    // --- FUNCIÓN DE AYUDA PARA FORMATEAR FECHA (Frontend) ---
+    const formatFechaMensaje = (fechaStr) => {
+        // Separamos para evitar problemas de zona horaria al crear el objeto Date
+        const [year, month, day] = fechaStr.split('-').map(Number);
+        const date = new Date(year, month - 1, day);
+        
+        // Obtenemos el nombre del día
+        const diaSemana = new Intl.DateTimeFormat('es-ES', { weekday: 'long' }).format(date);
+        const diaCapitalizado = diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1);
+        
+        // Retornamos Martes 07-04-2026
+        return `${diaCapitalizado} ${day.toString().padStart(2, '0')}-${month.toString().padStart(2, '0')}-${year}`;
+    };
+
     useEffect(() => {
-        // Fetch active patients for the dropdown
-        api.get('/pacientes?size=1000') // In real app use async select or pagination
+        api.get('/pacientes?size=1000')
             .then(res => setPacientes(res.data.content || []))
             .catch(err => console.error(err));
     }, []);
@@ -36,17 +49,20 @@ export default function NuevoTurnoModal({ onClose, selectedSlot, selectedEvent, 
 
         try {
             if (selectedEvent) {
-                // Update existing (PUT)
                 await api.put(`/turnos/${selectedEvent.uuid}`, formData);
                 toast.success('Turno actualizado correctamente');
             } else {
-                // Create new (POST)
                 await api.post('/turnos', formData);
-                toast.success('Turno creado. Se generó pago pendiente y recordatorio (RN-F03, RN-N01).');
+                toast.success('Turno creado correctamente.');
 
                 const paciente = pacientes.find(p => p.uuid === formData.pacienteUuid);
                 if (paciente && paciente.celular) {
-                    const text = `✅ Hola ${paciente.nombre}! Su turno fue confirmado para el ${formData.fecha} a las ${formData.horaComienzo}. Modalidad: ${formData.modalidad}. Importe: $${formData.precioFinal}. Solamente puede cancelar antes de las 48hs de la fecha del turno. ¡Nos vemos!\nProfesional: ${user?.profesionalNombre || ''}`;
+                    // USAMOS EL NUEVO FORMATO AQUÍ
+                    const fechaFormateada = formatFechaMensaje(formData.fecha);
+                    const horaFormateada = `${formData.horaComienzo}hs`;
+
+                    const text = `✅ Hola ${paciente.nombre}! Su turno fue confirmado para el ${fechaFormateada} a las ${horaFormateada}. Modalidad: ${formData.modalidad}. Importe: $${formData.precioFinal}. Solamente puede cancelar antes de las 48hs de la fecha del turno. ¡Nos vemos!\nProfesional: ${user?.profesionalNombre || ''}`;
+                    
                     const phone = paciente.celular.replace(/\D/g, '');
                     const url = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
                     window.open(url, '_blank');
@@ -55,7 +71,7 @@ export default function NuevoTurnoModal({ onClose, selectedSlot, selectedEvent, 
             onSuccess();
         } catch (err) {
             if (err.response?.status === 409) {
-                toast.error('Conflicto: Ya existe un turno activo en ese horario (RN-T01)');
+                toast.error('Conflicto: Ya existe un turno activo en ese horario');
             } else {
                 toast.error(err.response?.data?.message || 'Error al guardar el turno');
             }
@@ -69,53 +85,47 @@ export default function NuevoTurnoModal({ onClose, selectedSlot, selectedEvent, 
         const [hour, minute] = selectedEvent.horaComienzo.split(':').map(Number);
         const turnoDate = new Date(year, month - 1, day, hour, minute);
         const now = new Date();
-        const difMs = turnoDate - now;
-        const difHs = difMs / (1000 * 60 * 60);
+        const difHs = (turnoDate - now) / (1000 * 60 * 60);
 
-        let warnMsg = '¿Desea cancelar este turno? (RN-T03)';
+        let warnMsg = '¿Desea cancelar este turno?';
         let warnTitle = 'Cancelar Turno';
         if (difHs > 0 && difHs < 48) {
             warnTitle = 'Aviso importante (Menos de 48hs)';
-            warnMsg = 'Faltan menos de 48hs. El paciente deberá abonar la sesión igual. ¿Desea cancelar de todas formas?';
+            warnMsg = 'Faltan menos de 48hs. El paciente deberá abonar la sesión igual. ¿Desea cancelar?';
         }
 
         const result = await Swal.fire({
-            title: warnTitle,
-            text: warnMsg,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#ef4444',
-            cancelButtonColor: '#3b82f6',
-            confirmButtonText: 'Sí, cancelar',
-            cancelButtonText: 'No'
+            title: warnTitle, text: warnMsg, icon: 'warning',
+            showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'Sí, cancelar'
         });
         if (!result.isConfirmed) return;
 
         try {
             await api.patch(`/turnos/${selectedEvent.uuid}/estado`, { estado: 'CANCELADO' });
-            toast.success('Turno cancelado. Notificación enviada al paciente (RN-N03).');
+            toast.success('Turno cancelado.');
+            
             const paciente = pacientes.find(p => p.uuid === selectedEvent.pacienteUuid);
             if (paciente && paciente.celular) {
-                const text = `Hola ${paciente.nombre}! Su turno del ${selectedEvent.fecha} a las ${selectedEvent.horaComienzo} ha sido cancelado. Comuníquese para reprogramar.`;
+                const fechaFormateada = formatFechaMensaje(selectedEvent.fecha);
+                const text = `Hola ${paciente.nombre}! Su turno del ${fechaFormateada} a las ${selectedEvent.horaComienzo}hs ha sido cancelado. Comuníquese para reprogramar.`;
                 const phone = paciente.celular.replace(/\D/g, '');
-                const url = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
-                window.open(url, '_blank');
+                window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
             }
             onSuccess();
         } catch (err) {
             toast.error('Error al cancelar turno');
         }
-    }
+    };
 
     const handleRealizarTurno = async () => {
         try {
             await api.patch(`/turnos/${selectedEvent.uuid}/estado`, { estado: 'REALIZADO' });
-            toast.success('Turno marcado como realizado (RN-T04 terminal).');
+            toast.success('Turno realizado');
             onSuccess();
         } catch (err) {
             toast.error('Error al marcar realizado');
         }
-    }
+    };
 
     return (
         <div className="modal-overlay">
@@ -128,13 +138,7 @@ export default function NuevoTurnoModal({ onClose, selectedSlot, selectedEvent, 
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
                         <label>Paciente</label>
-                        <select
-                            name="pacienteUuid"
-                            value={formData.pacienteUuid}
-                            onChange={handleChange}
-                            required
-                            disabled={!!selectedEvent} // Don't allow changing patient of existing turno
-                        >
+                        <select name="pacienteUuid" value={formData.pacienteUuid} onChange={handleChange} required disabled={!!selectedEvent}>
                             <option value="">Seleccione un paciente...</option>
                             {pacientes.map(p => (
                                 <option key={p.uuid} value={p.uuid}>{p.nombre} {p.apellido}</option>
@@ -169,33 +173,17 @@ export default function NuevoTurnoModal({ onClose, selectedSlot, selectedEvent, 
 
                     <div className="form-group">
                         <label>Precio Final ($)</label>
-                        <input
-                            type="number"
-                            name="precioFinal"
-                            value={formData.precioFinal}
-                            onChange={handleChange}
-                            step="0.01"
-                            min="0.01"
-                            required
-                            placeholder="Ej: 15000"
-                            disabled={!!selectedEvent} // RN-T06: price frozen at creation
-                        />
+                        <input type="number" name="precioFinal" value={formData.precioFinal} onChange={handleChange} step="0.01" min="0.01" required disabled={!!selectedEvent} />
                     </div>
 
                     <div className="form-group">
                         <label>Observaciones</label>
-                        <textarea
-                            name="observaciones"
-                            value={formData.observaciones}
-                            onChange={handleChange}
-                            placeholder="Notas internas sobre el turno..."
-                            rows={2}
-                        />
+                        <textarea name="observaciones" value={formData.observaciones} onChange={handleChange} rows={2} />
                     </div>
 
                     {selectedEvent && (
                         <div className="mb-4 p-3 rounded" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border)' }}>
-                            <p className="text-sm font-bold mb-2">Estado Actual: <span className={`badge badge-${selectedEvent.estado.toLowerCase()}`}>{selectedEvent.estado}</span></p>
+                            <p className="text-sm font-bold mb-2">Estado: <span className={`badge badge-${selectedEvent.estado.toLowerCase()}`}>{selectedEvent.estado}</span></p>
 
                             {selectedEvent.estado === 'CONFIRMADO' && (
                                 <div className="flex gap-2">
@@ -203,12 +191,13 @@ export default function NuevoTurnoModal({ onClose, selectedSlot, selectedEvent, 
                                     <button type="button" className="btn btn-warning text-sm py-1" onClick={() => {
                                         const paciente = pacientes.find(p => p.uuid === selectedEvent.pacienteUuid);
                                         if (paciente && paciente.celular) {
-                                            const text = `✅ Hola ${paciente.nombre}! Su turno fue confirmado para el ${selectedEvent.fecha} a las ${selectedEvent.horaComienzo}. Modalidad: ${selectedEvent.modalidad}. Importe: $${selectedEvent.precioFinal}. Solamente puede cancelar antes de las 48hs de la fecha del turno. ¡Nos vemos!\nProfesional: ${user?.profesionalNombre || ''}`;
+                                            // REENVIAR TAMBIÉN CON EL NUEVO FORMATO
+                                            const fechaF = formatFechaMensaje(selectedEvent.fecha);
+                                            const text = `✅ Hola ${paciente.nombre}! Su turno fue confirmado para el ${fechaF} a las ${selectedEvent.horaComienzo}hs. Modalidad: ${selectedEvent.modalidad}. Importe: $${selectedEvent.precioFinal}. Solamente puede cancelar antes de las 48hs. ¡Nos vemos!\nProfesional: ${user?.profesionalNombre || ''}`;
                                             const phone = paciente.celular.replace(/\D/g, '');
-                                            const url = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
-                                            window.open(url, '_blank');
+                                            window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
                                         } else {
-                                            toast.error("El paciente no tiene un celular registrado.");
+                                            toast.error("El paciente no tiene celular registrado.");
                                         }
                                     }}>Reenviar WhatsApp</button>
                                     <button type="button" className="btn btn-danger text-sm py-1" onClick={handleCancelarTurno}>Cancelar Turno</button>
@@ -218,7 +207,7 @@ export default function NuevoTurnoModal({ onClose, selectedSlot, selectedEvent, 
                     )}
 
                     <div className="modal-footer">
-                        <button type="button" className="btn btn-ghost" onClick={onClose}>Cancelar</button>
+                        <button type="button" className="btn btn-ghost" onClick={onClose}>Cerrar</button>
                         {(!selectedEvent || selectedEvent.estado === 'CONFIRMADO') && (
                             <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
                                 {isSubmitting ? 'Guardando...' : 'Guardar Turno'}
