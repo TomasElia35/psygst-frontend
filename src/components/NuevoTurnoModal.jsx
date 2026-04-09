@@ -193,7 +193,7 @@ export default function NuevoTurnoModal({ onClose, selectedSlot, selectedEvent, 
                                         if (paciente && paciente.celular) {
                                             // REENVIAR TAMBIÉN CON EL NUEVO FORMATO
                                             const fechaF = formatFechaMensaje(selectedEvent.fecha);
-                                            const text = `✅ Hola ${paciente.nombre}! Su turno fue confirmado para el ${fechaF} a las ${selectedEvent.horaComienzo}hs. Modalidad: ${selectedEvent.modalidad}. Importe: $${selectedEvent.precioFinal}. Solamente puede cancelar antes de las 48hs. ¡Nos vemos!\nProfesional: ${user?.profesionalNombre || ''}`;
+                                            const text = `✅ Hola ${paciente.nombre}! Su turno fue confirmado para el ${fechaF} a las ${selectedEvent.horaComienzo}hs. Modalidad: ${selectedEvent.modalidad}. Importe: $${selectedEvent.precioFinal}. Solamente puede cancelar antes de las 48hs. ¡Nos vemos!\nProfesional: ${user?.nombreCompleto || ''}`;
                                             const phone = paciente.celular.replace(/\D/g, '');
                                             window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
                                         } else {
