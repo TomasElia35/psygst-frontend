@@ -48,7 +48,7 @@ export default function FichaPaciente() {
             setObrasSociales(osRes.data);
             setMotivosBaja(motRes.data);
             // Set default motivo once loaded
-            if (motRes.data.length > 0) setSelectedMotivoBaja(motRes.data[0].idMotivo);
+            if (motRes.data.length > 0) setSelectedMotivoBaja(motRes.data[0].uuid);
         } catch (err) {
             console.error('Error cargando catálogos', err);
         }
@@ -255,7 +255,7 @@ export default function FichaPaciente() {
                                 <select name="idObraSocial" value={formData.idObraSocial} onChange={handleChange}>
                                     <option value="">-- Sin obra social --</option>
                                     {obrasSociales.map(os => (
-                                        <option key={os.idObraSocial} value={os.idObraSocial}>{os.nombre}</option>
+                                        <option key={os.uuid} value={os.uuid}>{os.nombre}</option>
                                     ))}
                                 </select>
                             </div>
@@ -264,7 +264,7 @@ export default function FichaPaciente() {
                         <div className="form-row">
                             <div className="form-group">
                                 <label>Número de Afiliado</label>
-                                <input type="text" name="nroAfiliado" value={formData.nroAfiliado || ''} onChange={handleChange} disabled={!formData.idObraSocial || obrasSociales.find(os => os.idObraSocial === formData.idObraSocial)?.nombre === 'Particular'} />
+                                <input type="text" name="nroAfiliado" value={formData.nroAfiliado || ''} onChange={handleChange} disabled={!formData.idObraSocial || obrasSociales.find(os => os.uuid === formData.idObraSocial)?.nombre === 'Particular'} />
                             </div>
                         </div>
 
@@ -312,7 +312,7 @@ export default function FichaPaciente() {
                         ) : (
                             <div className="flex-col gap-3">
                                 {notasClinicas.map(nota => (
-                                    <div key={nota.idHistoriaClinica} className="p-3 bg-[var(--bg-card)] border border-[rgba(255,255,255,0.07)] rounded cursor-pointer hover:border-[var(--accent)] transition-all" onClick={() => handleVerNota(nota.idHistoriaClinica)} style={{ borderColor: 'var(--border)' }}>
+                                    <div key={nota.uuid} className="p-3 bg-[var(--bg-card)] border border-[rgba(255,255,255,0.07)] rounded cursor-pointer hover:border-[var(--accent)] transition-all" onClick={() => handleVerNota(nota.uuid)} style={{ borderColor: 'var(--border)' }}>
                                         <p className="text-xs text-[var(--accent)] font-bold mb-1">{new Date(nota.fechaCreacion).toLocaleDateString()}</p>
                                         <p className="text-sm text-muted line-clamp-2">{nota.resumen}</p>
                                     </div>
@@ -359,16 +359,16 @@ export default function FichaPaciente() {
                                 </thead>
                                 <tbody>
                                     {facturas.map(f => (
-                                        <tr key={f.idFactura}>
+                                        <tr key={f.uuid}>
                                             <td className="text-sm">{new Date(f.fechaCreacion).toLocaleDateString()}</td>
                                             <td className="font-bold text-sm" style={{ wordBreak: 'break-all' }}>{f.nombreArchivo}</td>
                                             <td>
                                                 <div className="flex gap-2 justify-end">
-                                                    <button className="btn btn-ghost text-xs p-1 h-8 px-2" onClick={() => window.open(`${api.defaults.baseURL}/facturas/${f.idFactura}/descargar`, '_blank')} title="Ver / Descargar">
+                                                    <button className="btn btn-ghost text-xs p-1 h-8 px-2" onClick={() => window.open(`${api.defaults.baseURL}/facturas/${f.uuid}/descargar`, '_blank')} title="Ver / Descargar">
                                                         <FileDown size={14} /> Descargar
                                                     </button>
                                                     <button className="btn btn-success text-xs p-1 h-8 px-2 flex gap-1 items-center" style={{ backgroundColor: '#25D366', color: 'white' }} onClick={() => {
-                                                        const text = `Hola ${formData.nombre}, te adjuntamos la factura correspondiente a tu atención médica.\nPuedes descargarla usando este enlace:\n${api.defaults.baseURL}/facturas/${f.idFactura}/descargar`;
+                                                        const text = `Hola ${formData.nombre}, te adjuntamos la factura correspondiente a tu atención médica.\nPuedes descargarla usando este enlace:\n${api.defaults.baseURL}/facturas/${f.uuid}/descargar`;
                                                         const phone = formData.celular ? formData.celular.replace(/\D/g, '') : '';
                                                         if (!phone) {
                                                             toast.error('El paciente no tiene un celular configurado');
@@ -401,7 +401,7 @@ export default function FichaPaciente() {
                             <label>Motivo de Baja * (RN-P03)</label>
                             <select value={selectedMotivoBaja} onChange={(e) => setSelectedMotivoBaja(e.target.value)}>
                                 {motivosBaja.map(m => (
-                                    <option key={m.idMotivo} value={m.idMotivo}>{m.descripcion || m.nombre}</option>
+                                    <option key={m.uuid} value={m.uuid}>{m.descripcion || m.nombre}</option>
                                 ))}
                             </select>
                         </div>
