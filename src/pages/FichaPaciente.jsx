@@ -13,18 +13,18 @@ export default function FichaPaciente() {
     const [activeTab, setActiveTab] = useState('datos');
     const [formData, setFormData] = useState({
         nombre: '', apellido: '', dni: '', email: '', celular: '',
-        idObraSocial: 1, nroAfiliado: '', observaciones: ''
+        idObraSocial: '', nroAfiliado: '', observaciones: ''
     });
 
-    const [obrasSociales, setObrasSociales] = useState([{ idObraSocial: 1, nombre: 'Particular' }]);
+    const [obrasSociales, setObrasSociales] = useState([]);
     const [notasClinicas, setNotasClinicas] = useState([]);
     const [facturas, setFacturas] = useState([]);
     const [uploadingFactura, setUploadingFactura] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [nuevaNota, setNuevaNota] = useState('');
-    const [motivosBaja, setMotivosBaja] = useState([{ idMotivo: 1, descripcion: 'Alta terapéutica' }]);
+    const [motivosBaja, setMotivosBaja] = useState([]);
     const [showBajaModal, setShowBajaModal] = useState(false);
-    const [selectedMotivoBaja, setSelectedMotivoBaja] = useState(1);
+    const [selectedMotivoBaja, setSelectedMotivoBaja] = useState('');
 
     useEffect(() => {
         // Basic catalog fetches should be externalized in a real app
@@ -40,18 +40,18 @@ export default function FichaPaciente() {
     }, [uuid]);
 
     const fetchCatalogs = async () => {
-        // Just mock standard options since we know the seed data
-        setObrasSociales([
-            { idObraSocial: 1, nombre: 'Particular' },
-            { idObraSocial: 2, nombre: 'OSDE' },
-            { idObraSocial: 3, nombre: 'Swiss Medical' },
-            { idObraSocial: 4, nombre: 'Galeno' }
-        ]);
-        setMotivosBaja([
-            { idMotivo: 1, descripcion: 'Alta terapéutica' },
-            { idMotivo: 2, descripcion: 'Abandono' },
-            { idMotivo: 3, descripcion: 'Derivación' }
-        ]);
+        try {
+            const [osRes, motRes] = await Promise.all([
+                api.get('/obras-sociales'),
+                api.get('/motivos')
+            ]);
+            setObrasSociales(osRes.data);
+            setMotivosBaja(motRes.data);
+            // Set default motivo once loaded
+            if (motRes.data.length > 0) setSelectedMotivoBaja(motRes.data[0].idMotivo);
+        } catch (err) {
+            console.error('Error cargando catálogos', err);
+        }
     };
 
     const fetchPaciente = async () => {
@@ -94,6 +94,7 @@ export default function FichaPaciente() {
             if (isNew) {
                 const { data } = await api.post('/pacientes', formData);
                 toast.success('Paciente creado');
+                // uuid field in PacienteResponse == idPaciente (the UUID PK)
                 navigate(`/pacientes/${data.uuid}`);
             } else {
                 await api.put(`/pacientes/${uuid}`, formData);
@@ -252,6 +253,7 @@ export default function FichaPaciente() {
                             <div className="form-group">
                                 <label>Obra Social</label>
                                 <select name="idObraSocial" value={formData.idObraSocial} onChange={handleChange}>
+                                    <option value="">-- Sin obra social --</option>
                                     {obrasSociales.map(os => (
                                         <option key={os.idObraSocial} value={os.idObraSocial}>{os.nombre}</option>
                                     ))}
@@ -262,7 +264,7 @@ export default function FichaPaciente() {
                         <div className="form-row">
                             <div className="form-group">
                                 <label>Número de Afiliado</label>
-                                <input type="text" name="nroAfiliado" value={formData.nroAfiliado || ''} onChange={handleChange} disabled={Number(formData.idObraSocial) === 1} />
+                                <input type="text" name="nroAfiliado" value={formData.nroAfiliado || ''} onChange={handleChange} disabled={!formData.idObraSocial || obrasSociales.find(os => os.idObraSocial === formData.idObraSocial)?.nombre === 'Particular'} />
                             </div>
                         </div>
 
@@ -310,7 +312,7 @@ export default function FichaPaciente() {
                         ) : (
                             <div className="flex-col gap-3">
                                 {notasClinicas.map(nota => (
-                                    <div key={nota.uuid} className="p-3 bg-[var(--bg-card)] border border-[rgba(255,255,255,0.07)] rounded cursor-pointer hover:border-[var(--accent)] transition-all" onClick={() => handleVerNota(nota.uuid)} style={{ borderColor: 'var(--border)' }}>
+                                    <div key={nota.idHistoriaClinica} className="p-3 bg-[var(--bg-card)] border border-[rgba(255,255,255,0.07)] rounded cursor-pointer hover:border-[var(--accent)] transition-all" onClick={() => handleVerNota(nota.idHistoriaClinica)} style={{ borderColor: 'var(--border)' }}>
                                         <p className="text-xs text-[var(--accent)] font-bold mb-1">{new Date(nota.fechaCreacion).toLocaleDateString()}</p>
                                         <p className="text-sm text-muted line-clamp-2">{nota.resumen}</p>
                                     </div>
@@ -357,16 +359,16 @@ export default function FichaPaciente() {
                                 </thead>
                                 <tbody>
                                     {facturas.map(f => (
-                                        <tr key={f.uuid}>
+                                        <tr key={f.idFactura}>
                                             <td className="text-sm">{new Date(f.fechaCreacion).toLocaleDateString()}</td>
                                             <td className="font-bold text-sm" style={{ wordBreak: 'break-all' }}>{f.nombreArchivo}</td>
                                             <td>
                                                 <div className="flex gap-2 justify-end">
-                                                    <button className="btn btn-ghost text-xs p-1 h-8 px-2" onClick={() => window.open(`${api.defaults.baseURL}/facturas/${f.uuid}/descargar`, '_blank')} title="Ver / Descargar">
+                                                    <button className="btn btn-ghost text-xs p-1 h-8 px-2" onClick={() => window.open(`${api.defaults.baseURL}/facturas/${f.idFactura}/descargar`, '_blank')} title="Ver / Descargar">
                                                         <FileDown size={14} /> Descargar
                                                     </button>
                                                     <button className="btn btn-success text-xs p-1 h-8 px-2 flex gap-1 items-center" style={{ backgroundColor: '#25D366', color: 'white' }} onClick={() => {
-                                                        const text = `Hola ${formData.nombre}, te adjuntamos la factura correspondiente a tu atención médica.\nPuedes descargarla usando este enlace:\n${api.defaults.baseURL}/facturas/${f.uuid}/descargar`;
+                                                        const text = `Hola ${formData.nombre}, te adjuntamos la factura correspondiente a tu atención médica.\nPuedes descargarla usando este enlace:\n${api.defaults.baseURL}/facturas/${f.idFactura}/descargar`;
                                                         const phone = formData.celular ? formData.celular.replace(/\D/g, '') : '';
                                                         if (!phone) {
                                                             toast.error('El paciente no tiene un celular configurado');
@@ -399,7 +401,7 @@ export default function FichaPaciente() {
                             <label>Motivo de Baja * (RN-P03)</label>
                             <select value={selectedMotivoBaja} onChange={(e) => setSelectedMotivoBaja(e.target.value)}>
                                 {motivosBaja.map(m => (
-                                    <option key={m.idMotivo} value={m.idMotivo}>{m.descripcion}</option>
+                                    <option key={m.idMotivo} value={m.idMotivo}>{m.descripcion || m.nombre}</option>
                                 ))}
                             </select>
                         </div>
