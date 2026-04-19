@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -6,10 +6,11 @@ import toast from 'react-hot-toast';
 const API_URL = import.meta.env.VITE_API_URL || '/api/v1';
 
 export default function Registro() {
+    const [roles, setRoles] = useState([]);
     const [formData, setFormData] = useState({
         username: '',
         password: '',
-        idRol: 2, // 2: PROFESIONAL por defecto
+        idRol: '',   // UUID — populated once roles are fetched
         nombre: '',
         apellido: '',
         email: '',
@@ -17,6 +18,19 @@ export default function Registro() {
     });
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        axios.get(`${API_URL}/roles`)
+            .then(res => {
+                setRoles(res.data);
+                if (res.data.length > 0) {
+                    // Default to PROFESIONAL role
+                    const prof = res.data.find(r => r.nombre === 'ROLE_PROFESIONAL') || res.data[0];
+                    setFormData(prev => ({ ...prev, idRol: prof.idRol }));
+                }
+            })
+            .catch(err => console.error('Error cargando roles', err));
+    }, []);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -81,8 +95,11 @@ export default function Registro() {
                     <div className="form-group">
                         <label>Rol</label>
                         <select name="idRol" value={formData.idRol} onChange={handleChange}>
-                            <option value={2}>Profesional / Terapeuta</option>
-                            <option value={1}>Administrador</option>
+                            {roles.map(r => (
+                                <option key={r.idRol} value={r.idRol}>
+                                    {r.nombre === 'ROLE_PROFESIONAL' ? 'Profesional / Terapeuta' : 'Administrador'}
+                                </option>
+                            ))}
                         </select>
                     </div>
 

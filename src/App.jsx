@@ -10,6 +10,10 @@ import Finanzas from './pages/Finanzas';
 import Notificaciones from './pages/Notificaciones';
 import Registro from './pages/Registro';
 import ErrorBoundary from './components/ErrorBoundary';
+import MaintenanceMode from './components/MaintenanceMode.jsx';
+
+// RN-S03: Block all routes during DB migration to prevent new data creation
+const MAINTENANCE_MODE = import.meta.env.VITE_MAINTENANCE_MODE === 'true';
 
 function ProtectedRoute({ children }) {
     const { isAuthenticated } = useAuth();
@@ -17,6 +21,11 @@ function ProtectedRoute({ children }) {
 }
 
 function App() {
+    // If maintenance mode is active, show only the maintenance screen
+    if (MAINTENANCE_MODE) {
+        return <MaintenanceMode />;
+    }
+
     return (
         <BrowserRouter>
             <ErrorBoundary>
