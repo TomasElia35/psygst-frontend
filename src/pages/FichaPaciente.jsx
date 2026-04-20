@@ -48,7 +48,7 @@ export default function FichaPaciente() {
             setObrasSociales(osRes.data);
             setMotivosBaja(motRes.data);
             // Set default motivo once loaded
-            if (motRes.data.length > 0) setSelectedMotivoBaja(motRes.data[0].uuid);
+            if (motRes.data.length > 0) setSelectedMotivoBaja(motRes.data[0].idMotivo);
         } catch (err) {
             console.error('Error cargando catálogos', err);
         }
@@ -255,7 +255,7 @@ export default function FichaPaciente() {
                                 <select name="idObraSocial" value={formData.idObraSocial} onChange={handleChange}>
                                     <option value="">-- Sin obra social --</option>
                                     {obrasSociales.map(os => (
-                                        <option key={os.uuid} value={os.uuid}>{os.nombre}</option>
+                                        <option key={os.idObraSocial} value={os.idObraSocial}>{os.nombre}</option>
                                     ))}
                                 </select>
                             </div>
@@ -264,7 +264,7 @@ export default function FichaPaciente() {
                         <div className="form-row">
                             <div className="form-group">
                                 <label>Número de Afiliado</label>
-                                <input type="text" name="nroAfiliado" value={formData.nroAfiliado || ''} onChange={handleChange} disabled={!formData.idObraSocial || obrasSociales.find(os => os.uuid === formData.idObraSocial)?.nombre === 'Particular'} />
+                                <input type="text" name="nroAfiliado" value={formData.nroAfiliado || ''} onChange={handleChange} disabled={!formData.idObraSocial || obrasSociales.find(os => os.idObraSocial === formData.idObraSocial)?.nombre === 'Particular'} />
                             </div>
                         </div>
 
@@ -401,7 +401,7 @@ export default function FichaPaciente() {
                             <label>Motivo de Baja * (RN-P03)</label>
                             <select value={selectedMotivoBaja} onChange={(e) => setSelectedMotivoBaja(e.target.value)}>
                                 {motivosBaja.map(m => (
-                                    <option key={m.uuid} value={m.uuid}>{m.descripcion || m.nombre}</option>
+                                    <option key={m.idMotivo} value={m.idMotivo}>{m.descripcion || m.nombre}</option>
                                 ))}
                             </select>
                         </div>
