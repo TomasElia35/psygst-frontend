@@ -10,7 +10,7 @@ function PagoModal({ pago, onClose, onConfirm }) {
 
     const handleConfirm = async () => {
         setIsSubmitting(true);
-        await onConfirm(pago.idPago, metodo);
+        await onConfirm(pago.uuid, metodo);
         setIsSubmitting(false);
     };
 
@@ -128,7 +128,7 @@ export default function Finanzas() {
         try {
             const { data } = await api.post(`/recibos/generar/${pagoUuid}`);
             toast.success(`Recibo ${data.nroRecibo} generado`);
-            const pdfData = await api.get(`/recibos/${data.idRecibo}/descargar`, { responseType: 'blob' });
+            const pdfData = await api.get(`/recibos/${data.uuid}/descargar`, { responseType: 'blob' });
             const url = window.URL.createObjectURL(new Blob([pdfData.data]));
             const link = document.createElement('a');
             link.href = url;
@@ -190,7 +190,7 @@ export default function Finanzas() {
                                     </thead>
                                     <tbody>
                                         {pagosPendientes.map(p => (
-                                            <tr key={p.idPago}>
+                                            <tr key={p.uuid}>
                                                 <td><span className="text-sm">{p.fechaTurno}</span></td>
                                                 <td className="font-bold text-sm">{p.pacienteNombreCompleto}</td>
                                                 <td className="text-[var(--danger)] font-bold">${parseFloat(p.monto).toFixed(2)}</td>
@@ -230,13 +230,13 @@ export default function Finanzas() {
                                     </thead>
                                     <tbody>
                                         {pagosRealizados.slice(0, 10).map(p => (
-                                            <tr key={p.idPago}>
+                                            <tr key={p.uuid}>
                                                 <td><span className="text-sm">{p.fechaPago ? new Date(p.fechaPago).toLocaleDateString() : '—'}</span></td>
                                                 <td className="font-bold text-sm">{p.pacienteNombreCompleto}</td>
                                                 <td className="text-[var(--success)] font-bold">${parseFloat(p.monto).toFixed(2)}</td>
                                                 <td className="text-xs text-muted">{p.metodoPago}</td>
                                                 <td>
-                                                    <button className="btn btn-ghost text-xs py-1 px-2" onClick={() => handleGenerarRecibo(p.idPago)}>
+                                                    <button className="btn btn-ghost text-xs py-1 px-2" onClick={() => handleGenerarRecibo(p.uuid)}>
                                                         <FileText size={14} /> Recibo
                                                     </button>
                                                 </td>
