@@ -26,7 +26,7 @@ export default function Registro() {
                 if (res.data.length > 0) {
                     // Default to PROFESIONAL role
                     const prof = res.data.find(r => r.nombre === 'ROLE_PROFESIONAL') || res.data[0];
-                    setFormData(prev => ({ ...prev, idRol: prof.uuid }));
+                    setFormData(prev => ({ ...prev, idRol: prof.idRol }));
                 }
             })
             .catch(err => console.error('Error cargando roles', err));
@@ -96,7 +96,7 @@ export default function Registro() {
                         <label>Rol</label>
                         <select name="idRol" value={formData.idRol} onChange={handleChange}>
                             {roles.map(r => (
-                                <option key={r.uuid} value={r.uuid}>
+                                <option key={r.idRol} value={r.idRol}>
                                     {r.nombre === 'ROLE_PROFESIONAL' ? 'Profesional / Terapeuta' : 'Administrador'}
                                 </option>
                             ))}
