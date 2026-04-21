@@ -1,13 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api/axios';
 import { toast } from 'react-hot-toast';
 import { Save, User } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-
-const API_URL = import.meta.env.VITE_API_URL || '/api/v1';
 
 export default function Perfil() {
-    const { token } = useAuth();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [profesiones, setProfesiones] = useState([]);
@@ -28,13 +24,11 @@ export default function Perfil() {
         const fetchData = async () => {
             try {
                 // Fetch catalogue
-                const resProfesiones = await axios.get(`${API_URL}/profesiones`);
+                const resProfesiones = await api.get(`/profesiones`);
                 setProfesiones(resProfesiones.data);
 
                 // Fetch personal data
-                const resPerfil = await axios.get(`${API_URL}/profesionales/me`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                const resPerfil = await api.get(`/profesionales/me`);
                 
                 const data = resPerfil.data;
                 setFormData({
@@ -73,9 +67,7 @@ export default function Perfil() {
         setSaving(true);
         
         try {
-            await axios.put(`${API_URL}/profesionales/me`, formData, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            await api.put(`/profesionales/me`, formData);
             toast.success("Perfil actualizado exitosamente");
         } catch (error) {
             console.error("Error updating profile:", error);
