@@ -9,6 +9,7 @@ import FichaPaciente from './pages/FichaPaciente';
 import Finanzas from './pages/Finanzas';
 import Notificaciones from './pages/Notificaciones';
 import Registro from './pages/Registro';
+import Perfil from './pages/Perfil';
 import ErrorBoundary from './components/ErrorBoundary';
 import MaintenanceMode from './components/MaintenanceMode.jsx';
 
@@ -44,6 +45,7 @@ function App() {
                         <Route path="pacientes/:uuid" element={<FichaPaciente />} />
                         <Route path="finanzas" element={<Finanzas />} />
                         <Route path="notificaciones" element={<Notificaciones />} />
+                        <Route path="perfil" element={<Perfil />} />
                         {/* Catch-all redirect to dashboard */}
                         <Route path="*" element={<Navigate to="/dashboard" replace />} />
                     </Route>
