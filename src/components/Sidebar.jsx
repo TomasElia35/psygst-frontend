@@ -8,7 +8,8 @@ import {
     Wallet,
     Bell,
     LogOut,
-    UserPlus
+    UserPlus,
+    Settings
 } from 'lucide-react';
 
 export default function Sidebar() {
@@ -26,6 +27,7 @@ export default function Sidebar() {
         { path: '/pacientes', icon: Users, label: 'Pacientes' },
         { path: '/finanzas', icon: Wallet, label: 'Finanzas & Recibos' },
         { path: '/notificaciones', icon: Bell, label: 'Notificaciones' },
+        { path: '/perfil', icon: Settings, label: 'Mi Perfil' },
     ];
 
     if (user?.rol === 'ROLE_ADMIN') {
