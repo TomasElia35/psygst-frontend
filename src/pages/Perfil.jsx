@@ -52,7 +52,7 @@ export default function Perfil() {
         };
 
         fetchData();
-    }, [token]);
+    }, []);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
