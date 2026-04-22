@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api/axios';
 import { toast } from 'react-hot-toast';
-import { Save, User } from 'lucide-react';
+import { Save, User, Key } from 'lucide-react';
 
 export default function Perfil() {
     const [loading, setLoading] = useState(true);
@@ -19,6 +19,13 @@ export default function Perfil() {
         alias: '',
         idProfesion: ''
     });
+
+    const [passwordData, setPasswordData] = useState({
+        oldPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+    });
+    const [savingPassword, setSavingPassword] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -62,6 +69,14 @@ export default function Perfil() {
         }));
     };
 
+    const handlePasswordChange = (e) => {
+        const { name, value } = e.target;
+        setPasswordData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSaving(true);
@@ -75,6 +90,37 @@ export default function Perfil() {
             toast.error(msg);
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handlePasswordSubmit = async (e) => {
+        e.preventDefault();
+        
+        if (passwordData.newPassword !== passwordData.confirmPassword) {
+            toast.error("Las contraseñas nuevas no coinciden");
+            return;
+        }
+
+        if (passwordData.newPassword.length < 6) {
+            toast.error("La contraseña debe tener al menos 6 caracteres");
+            return;
+        }
+
+        setSavingPassword(true);
+        
+        try {
+            await api.put(`/auth/cambiar-password`, {
+                oldPassword: passwordData.oldPassword,
+                newPassword: passwordData.newPassword
+            });
+            toast.success("Contraseña actualizada exitosamente");
+            setPasswordData({ oldPassword: '', newPassword: '', confirmPassword: '' });
+        } catch (error) {
+            console.error("Error changing password:", error);
+            const msg = error.response?.data?.message || "Error al cambiar la contraseña";
+            toast.error(msg);
+        } finally {
+            setSavingPassword(false);
         }
     };
 
@@ -221,6 +267,66 @@ export default function Perfil() {
                     >
                         <Save size={18} />
                         {saving ? 'Guardando...' : 'Guardar Cambios'}
+                    </button>
+                </div>
+            </form>
+
+            <form onSubmit={handlePasswordSubmit} className="card p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 mt-6">
+                <header className="mb-6 flex items-center gap-3 border-b pb-4">
+                    <div className="bg-amber-100 dark:bg-amber-900/30 p-2 rounded-full text-amber-600 dark:text-amber-400">
+                        <Key size={20} />
+                    </div>
+                    <div>
+                        <h2 className="text-lg font-bold">Cambiar Contraseña</h2>
+                        <p className="text-sm text-muted">Actualiza tu contraseña de acceso al sistema</p>
+                    </div>
+                </header>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div className="form-group mb-0 md:col-span-2">
+                        <label className="block text-sm font-medium mb-1">Contraseña Actual</label>
+                        <input 
+                            type="password" 
+                            name="oldPassword" 
+                            value={passwordData.oldPassword} 
+                            onChange={handlePasswordChange} 
+                            required 
+                            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                        />
+                    </div>
+                    
+                    <div className="form-group mb-0">
+                        <label className="block text-sm font-medium mb-1">Nueva Contraseña</label>
+                        <input 
+                            type="password" 
+                            name="newPassword" 
+                            value={passwordData.newPassword} 
+                            onChange={handlePasswordChange} 
+                            required 
+                            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                        />
+                    </div>
+                    <div className="form-group mb-0">
+                        <label className="block text-sm font-medium mb-1">Confirmar Nueva Contraseña</label>
+                        <input 
+                            type="password" 
+                            name="confirmPassword" 
+                            value={passwordData.confirmPassword} 
+                            onChange={handlePasswordChange} 
+                            required 
+                            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                        />
+                    </div>
+                </div>
+
+                <div className="flex justify-end pt-4 border-t mt-4">
+                    <button 
+                        type="submit" 
+                        disabled={savingPassword}
+                        className="btn bg-amber-600 hover:bg-amber-700 text-white flex items-center gap-2 px-4 py-2 rounded-md transition-colors"
+                    >
+                        <Save size={18} />
+                        {savingPassword ? 'Actualizando...' : 'Actualizar Contraseña'}
                     </button>
                 </div>
             </form>
