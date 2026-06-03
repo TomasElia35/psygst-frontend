@@ -12,6 +12,7 @@ import Registro from './pages/Registro';
 import Perfil from './pages/Perfil';
 import ErrorBoundary from './components/ErrorBoundary';
 import MaintenanceMode from './components/MaintenanceMode.jsx';
+import Landing from './pages/Landing';
 
 // RN-S03: Block all routes during DB migration to prevent new data creation
 const MAINTENANCE_MODE = import.meta.env.VITE_MAINTENANCE_MODE === 'true';
@@ -33,19 +34,19 @@ function App() {
                 <Routes>
                     <Route path="/login" element={<Login />} />
                     <Route path="/registro" element={<Registro />} />
-                    <Route path="/" element={
+                    <Route path="/" element={<Landing />} />
+                    <Route element={
                         <ProtectedRoute>
                             <Layout />
                         </ProtectedRoute>
                     }>
-                        <Route index element={<Navigate to="/dashboard" replace />} />
-                        <Route path="dashboard" element={<Dashboard />} />
-                        <Route path="agenda" element={<Agenda />} />
-                        <Route path="pacientes" element={<Pacientes />} />
-                        <Route path="pacientes/:uuid" element={<FichaPaciente />} />
-                        <Route path="finanzas" element={<Finanzas />} />
-                        <Route path="notificaciones" element={<Notificaciones />} />
-                        <Route path="perfil" element={<Perfil />} />
+                        <Route path="/dashboard" element={<Dashboard />} />
+                        <Route path="/agenda" element={<Agenda />} />
+                        <Route path="/pacientes" element={<Pacientes />} />
+                        <Route path="/pacientes/:uuid" element={<FichaPaciente />} />
+                        <Route path="/finanzas" element={<Finanzas />} />
+                        <Route path="/notificaciones" element={<Notificaciones />} />
+                        <Route path="/perfil" element={<Perfil />} />
                         {/* Catch-all redirect to dashboard */}
                         <Route path="*" element={<Navigate to="/dashboard" replace />} />
                     </Route>

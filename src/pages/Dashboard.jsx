@@ -3,6 +3,10 @@ import api from '../api/axios';
 import { Users, Calendar as CalendarIcon, Wallet, Activity } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
+import { normalizeFechaString, normalizeTimeString } from '../utils/dateUtils';
+import { ESTADOS_TURNO } from '../utils/constants';
+import Loader from '../components/Loader';
+import EmptyState from '../components/EmptyState';
 
 function MetricCard({ title, value, icon: Icon, color }) {
     return (
@@ -43,26 +47,16 @@ export default function Dashboard() {
                 api.get('/pagos/pagados')
             ]);
 
-            // Helper: normalize fecha from either string "2026-03-13" or array [2026,3,13]
-            const normalizeFecha = (fecha) => {
-                if (!fecha) return '';
-                if (Array.isArray(fecha)) {
-                    const [y, m, day] = fecha;
-                    return `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                }
-                return String(fecha).substring(0, 10);
-            };
-
             const todosTurnos = turnosRes.data || [];
-            const turnosDelDia = todosTurnos.filter(t => normalizeFecha(t.fecha) === today && t.estado !== 'CANCELADO');
+            const turnosDelDia = todosTurnos.filter(t => normalizeFechaString(t.fecha) === today && t.estado !== ESTADOS_TURNO.CANCELADO);
             setTurnosHoy(turnosDelDia);
 
             // Normalize turno data for display
             const turnosDelDiaNormalized = turnosDelDia.map(t => ({
                 ...t,
-                fecha: normalizeFecha(t.fecha),
-                horaComienzo: Array.isArray(t.horaComienzo) ? t.horaComienzo.slice(0, 2).map(n => String(n).padStart(2, '0')).join(':') : String(t.horaComienzo).substring(0, 5),
-                horaFin: Array.isArray(t.horaFin) ? t.horaFin.slice(0, 2).map(n => String(n).padStart(2, '0')).join(':') : String(t.horaFin).substring(0, 5),
+                fecha: normalizeFechaString(t.fecha),
+                horaComienzo: normalizeTimeString(t.horaComienzo).substring(0, 5),
+                horaFin: normalizeTimeString(t.horaFin).substring(0, 5),
             }));
             setTurnosHoy(turnosDelDiaNormalized);
 
@@ -96,7 +90,7 @@ export default function Dashboard() {
         }
     };
 
-    if (isLoading) return <div className="p-8">Cargando dashboard...</div>;
+    if (isLoading) return <Loader fullScreen text="Cargando resumen del día..." />;
 
     return (
         <div>
@@ -118,10 +112,11 @@ export default function Dashboard() {
                 <div className="card">
                     <h2 className="text-lg font-bold mb-4">Turnos de Hoy</h2>
                     {turnosHoy.length === 0 ? (
-                        <div className="empty-state">
-                            <CalendarIcon size={32} />
-                            <p>No tienes turnos programados para hoy.</p>
-                        </div>
+                        <EmptyState 
+                            icon={CalendarIcon} 
+                            title="Sin turnos programados" 
+                            description="No tienes turnos agendados para el día de hoy." 
+                        />
                     ) : (
                         <div className="flex-col gap-3">
                             {turnosHoy.map(turno => (
