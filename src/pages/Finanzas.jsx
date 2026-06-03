@@ -101,6 +101,7 @@ export default function Finanzas() {
     const [filterMonth, setFilterMonth] = useState(now.getMonth() + 1);
 
     const [isExporting, setIsExporting] = useState(false);
+    const [isLoadingPagados, setIsLoadingPagados] = useState(true);
     const [pagoSeleccionado, setPagoSeleccionado] = useState(null);
 
     // Búsqueda client-side
@@ -124,9 +125,11 @@ export default function Finanzas() {
 
     const fetchPagados = async () => {
         try {
+            setIsLoadingPagados(true);
             // Traemos todos sin filtro de mes (size grande para no paginar en backend)
             const { data } = await api.get('/pagos/pagados?page=0&size=9999&busqueda=');
-            setTodosPagados(data.content.map(p => ({
+            const items = Array.isArray(data) ? data : (data?.content || []);
+            setTodosPagados(items.map(p => ({
                 ...p,
                 fechaTurno: normalizeFechaString(p.fechaTurno),
                 _fechaPagoDate: normalizeFechaToDate(p.fechaPago),
@@ -136,6 +139,8 @@ export default function Finanzas() {
             })));
         } catch (err) {
             console.error(err);
+        } finally {
+            setIsLoadingPagados(false);
         }
     };
 
@@ -323,7 +328,7 @@ export default function Finanzas() {
                         </div>
 
                         {pagosRealizados.length === 0 ? (
-                            todosPagados.length === 0 ? (
+                            isLoadingPagados ? (
                                 <Loader text="Cargando historial..." />
                             ) : (
                                 <EmptyState 

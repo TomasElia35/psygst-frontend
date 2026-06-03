@@ -61,8 +61,10 @@ export default function Dashboard() {
             setTurnosHoy(turnosDelDiaNormalized);
 
             let mesSuma = 0;
-            if (pagosPagadosRes.data && pagosPagadosRes.data.length > 0) {
-                const pagosMes = pagosPagadosRes.data.filter(p => {
+            const pagosPagadosData = Array.isArray(pagosPagadosRes.data) ? pagosPagadosRes.data : (pagosPagadosRes.data?.content || []);
+            
+            if (pagosPagadosData.length > 0) {
+                const pagosMes = pagosPagadosData.filter(p => {
                     if (!p.fechaPago) return false;
                     let pd;
                     if (Array.isArray(p.fechaPago)) {
