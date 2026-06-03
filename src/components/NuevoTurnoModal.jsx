@@ -4,6 +4,9 @@ import toast from 'react-hot-toast';
 import { X } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { useAuth } from '../context/AuthContext';
+import { formatFechaAmigable } from '../utils/dateUtils';
+import { getWhatsAppUrl, generarMensajeTurnoNuevo, generarMensajeTurnoCancelado } from '../utils/whatsappUtils';
+import { ESTADOS_TURNO, MODALIDAD_TURNO } from '../utils/constants';
 
 export default function NuevoTurnoModal({ onClose, selectedSlot, selectedEvent, onSuccess }) {
     const { user } = useAuth();
@@ -15,29 +18,40 @@ export default function NuevoTurnoModal({ onClose, selectedSlot, selectedEvent, 
         horaFin: selectedSlot?.horaFin || selectedEvent?.horaFin || '10:00',
         modalidad: selectedEvent?.modalidad || 'PRESENCIAL',
         precioFinal: selectedEvent?.precioFinal || '',
+        moneda: selectedEvent?.moneda || 'ARS',
+        cotizacion: selectedEvent?.cotizacion || '',
         observaciones: selectedEvent?.observaciones || ''
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // --- FUNCIÓN DE AYUDA PARA FORMATEAR FECHA (Frontend) ---
-    const formatFechaMensaje = (fechaStr) => {
-        // Separamos para evitar problemas de zona horaria al crear el objeto Date
-        const [year, month, day] = fechaStr.split('-').map(Number);
-        const date = new Date(year, month - 1, day);
-
-        // Obtenemos el nombre del día
-        const diaSemana = new Intl.DateTimeFormat('es-ES', { weekday: 'long' }).format(date);
-        const diaCapitalizado = diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1);
-
-        // Retornamos Martes 07-04-2026
-        return `${diaCapitalizado} ${day.toString().padStart(2, '0')}-${month.toString().padStart(2, '0')}-${year}`;
-    };
+    // --- FUNCIÓN DE AYUDA PARA FORMATEAR FECHA AHORA VIENE DE DATEUTILS ---
 
     useEffect(() => {
         api.get('/pacientes?size=1000')
             .then(res => setPacientes(res.data.content || []))
             .catch(err => console.error(err));
     }, []);
+
+    const handleFetchCotizacion = async () => {
+        try {
+            const res = await fetch('https://api.bluelytics.com.ar/v2/latest');
+            const data = await res.json();
+            let newCotizacion = '';
+            if (formData.moneda === 'USD') {
+                newCotizacion = data.blue.value_avg;
+            } else if (formData.moneda === 'EUR') {
+                newCotizacion = data.blue_euro.value_avg;
+            }
+            if (newCotizacion) {
+                setFormData({ ...formData, cotizacion: newCotizacion });
+                toast.success('Cotización obtenida correctamente');
+            } else {
+                toast.error('No se pudo obtener la cotización para esta moneda');
+            }
+        } catch (err) {
+            toast.error('Error al obtener cotización. Ingresela manualmente.');
+        }
+    };
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -57,15 +71,18 @@ export default function NuevoTurnoModal({ onClose, selectedSlot, selectedEvent, 
 
                 const paciente = pacientes.find(p => p.uuid === formData.pacienteUuid);
                 if (paciente && paciente.celular) {
-                    // USAMOS EL NUEVO FORMATO AQUÍ
-                    const fechaFormateada = formatFechaMensaje(formData.fecha);
-                    const horaFormateada = `${formData.horaComienzo}hs`;
-
-                    const text = `✅ Hola ${paciente.nombre}! Su turno fue confirmado para el ${fechaFormateada} a las ${horaFormateada}. Modalidad: ${formData.modalidad}. Importe: $${formData.precioFinal}. Solamente puede cancelar antes de las 48hs de la fecha del turno. ¡Nos vemos!\nProfesional: ${user?.nombreCompleto || ''}`;
-
-                    const phone = paciente.celular.replace(/\D/g, '');
-                    const url = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
-                    window.open(url, '_blank');
+                    const fechaFormateada = formatFechaAmigable(formData.fecha);
+                    const mensaje = generarMensajeTurnoNuevo(
+                        paciente.nombre, 
+                        fechaFormateada, 
+                        formData.horaComienzo, 
+                        formData.modalidad, 
+                        formData.precioFinal, 
+                        formData.moneda, 
+                        user?.nombreCompleto
+                    );
+                    const url = getWhatsAppUrl(paciente.celular, mensaje);
+                    if (url) window.open(url, '_blank');
                 }
             }
             onSuccess();
@@ -106,10 +123,10 @@ export default function NuevoTurnoModal({ onClose, selectedSlot, selectedEvent, 
 
             const paciente = pacientes.find(p => p.uuid === selectedEvent.pacienteUuid);
             if (paciente && paciente.celular) {
-                const fechaFormateada = formatFechaMensaje(selectedEvent.fecha);
-                const text = `Hola ${paciente.nombre}! Su turno del ${fechaFormateada} a las ${selectedEvent.horaComienzo}hs ha sido cancelado. Comuníquese para reprogramar.`;
-                const phone = paciente.celular.replace(/\D/g, '');
-                window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
+                const fechaFormateada = formatFechaAmigable(selectedEvent.fecha);
+                const mensaje = generarMensajeTurnoCancelado(paciente.nombre, fechaFormateada, selectedEvent.horaComienzo);
+                const url = getWhatsAppUrl(paciente.celular, mensaje);
+                if (url) window.open(url, '_blank');
             }
             onSuccess();
         } catch (err) {
@@ -171,10 +188,33 @@ export default function NuevoTurnoModal({ onClose, selectedSlot, selectedEvent, 
                         </div>
                     </div>
 
-                    <div className="form-group">
-                        <label>Precio Final ($)</label>
-                        <input type="number" name="precioFinal" value={formData.precioFinal} onChange={handleChange} step="0.01" min="0.01" required disabled={!!selectedEvent} />
+                    <div className="form-row">
+                        <div className="form-group">
+                            <label>Moneda</label>
+                            <select name="moneda" value={formData.moneda} onChange={handleChange} disabled={!!selectedEvent}>
+                                <option value="ARS">Pesos Argentinos (ARS)</option>
+                                <option value="USD">Dólares (USD)</option>
+                                <option value="EUR">Euros (EUR)</option>
+                                <option value="BRL">Reales (BRL)</option>
+                            </select>
+                        </div>
+                        <div className="form-group">
+                            <label>Precio Final ({formData.moneda})</label>
+                            <input type="number" name="precioFinal" value={formData.precioFinal} onChange={handleChange} step="0.01" min="0.01" required disabled={!!selectedEvent} />
+                        </div>
                     </div>
+
+                    {formData.moneda !== 'ARS' && (
+                        <div className="form-group">
+                            <label>Cotización (Valor en ARS por unidad)</label>
+                            <div className="flex gap-2">
+                                <input type="number" name="cotizacion" value={formData.cotizacion} onChange={handleChange} step="0.01" min="0.01" required={!selectedEvent} disabled={!!selectedEvent} className="flex-1 px-3 py-2 border rounded-md" />
+                                {(!selectedEvent && (formData.moneda === 'USD' || formData.moneda === 'EUR')) && (
+                                    <button type="button" onClick={handleFetchCotizacion} className="btn btn-secondary px-3 py-2 whitespace-nowrap text-sm">Traer Cotización</button>
+                                )}
+                            </div>
+                        </div>
+                    )}
 
                     <div className="form-group">
                         <label>Observaciones</label>
@@ -191,11 +231,22 @@ export default function NuevoTurnoModal({ onClose, selectedSlot, selectedEvent, 
                                     <button type="button" className="btn btn-warning text-sm py-1" onClick={() => {
                                         const paciente = pacientes.find(p => p.uuid === selectedEvent.pacienteUuid);
                                         if (paciente && paciente.celular) {
-                                            // REENVIAR TAMBIÉN CON EL NUEVO FORMATO
-                                            const fechaF = formatFechaMensaje(selectedEvent.fecha);
-                                            const text = `✅ Hola ${paciente.nombre}! Su turno fue confirmado para el ${fechaF} a las ${selectedEvent.horaComienzo}hs. Modalidad: ${selectedEvent.modalidad}. Importe: $${selectedEvent.precioFinal}. Solamente puede cancelar antes de las 48hs. ¡Nos vemos!\nProfesional: ${user?.nombreCompleto || ''}`;
-                                            const phone = paciente.celular.replace(/\D/g, '');
-                                            window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
+                                            const fechaF = formatFechaAmigable(selectedEvent.fecha);
+                                            const mensaje = generarMensajeTurnoNuevo(
+                                                paciente.nombre, 
+                                                fechaF, 
+                                                selectedEvent.horaComienzo, 
+                                                selectedEvent.modalidad, 
+                                                selectedEvent.precioFinal, 
+                                                selectedEvent.moneda || 'ARS', 
+                                                user?.nombreCompleto
+                                            );
+                                            const url = getWhatsAppUrl(paciente.celular, mensaje);
+                                            if (url) {
+                                                window.open(url, '_blank');
+                                            } else {
+                                                toast.error("Número de celular inválido.");
+                                            }
                                         } else {
                                             toast.error("El paciente no tiene celular registrado.");
                                         }

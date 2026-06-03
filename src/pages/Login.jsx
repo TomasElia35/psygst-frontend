@@ -40,7 +40,12 @@ export default function Login() {
     return (
         <div className="login-page">
             <div className="login-card">
-                <h1>PsyGst</h1>
+                <p style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase', textAlign: 'center' }}>Psy Gst</p>
+                <img
+                    src="/LogoPsyGst.png"
+                    alt="PsyGst"
+                    style={{ maxWidth: 160, width: '100%', objectFit: 'contain', display: 'block', margin: '0 auto 8px' }}
+                />
                 <p>Inicie sesión para acceder a su consultorio</p>
 
                 <form onSubmit={handleSubmit} className="flex-col gap-4">
@@ -83,6 +88,23 @@ export default function Login() {
                         {isLoading ? 'Ingresando...' : 'Iniciar Sesión'}
                     </button>
                 </form>
+
+                <div style={{
+                    marginTop: '24px',
+                    textAlign: 'center',
+                    paddingTop: '16px',
+                    borderTop: '1px solid var(--border)'
+                }}>
+                    <span style={{
+                        fontSize: '11px',
+                        color: 'var(--text-muted)',
+                        fontWeight: 500,
+                        letterSpacing: '0.5px',
+                        textTransform: 'uppercase'
+                    }}>
+                        v{__APP_VERSION__}
+                    </span>
+                </div>
             </div>
         </div>
     );

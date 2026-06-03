@@ -37,7 +37,11 @@ export default function Sidebar() {
     return (
         <aside className="sidebar">
             <div className="sidebar-logo">
-                <h1>PsyGst</h1>
+                <img
+                    src="/LogoPsyGst.png"
+                    alt="PsyGst"
+                    style={{ width: '100%', maxWidth: 140, objectFit: 'contain', display: 'block', margin: '0 auto' }}
+                />
                 <p>Gestión Psicológica</p>
             </div>
 

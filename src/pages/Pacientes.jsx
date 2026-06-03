@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
-import { Search, UserPlus, FileText, ChevronRight } from 'lucide-react';
+import { Search, UserPlus, FileText, ChevronRight, Users } from 'lucide-react';
 import toast from 'react-hot-toast';
+import EmptyState from '../components/EmptyState';
+import Pagination from '../components/Pagination';
 
 export default function Pacientes() {
     const [pacientes, setPacientes] = useState([]);
@@ -71,9 +73,13 @@ export default function Pacientes() {
                         <tbody>
                             {pacientes.length === 0 ? (
                                 <tr>
-                                    <td colSpan="4">
-                                        <div className="empty-state">
-                                            <p>No se encontraron pacientes activos.</p>
+                                    <td colSpan="4" className="p-0 border-b-0">
+                                        <div className="p-8">
+                                            <EmptyState 
+                                                icon={Users} 
+                                                title="No hay pacientes" 
+                                                description="No se encontraron pacientes que coincidan con la búsqueda." 
+                                            />
                                         </div>
                                     </td>
                                 </tr>
@@ -115,13 +121,8 @@ export default function Pacientes() {
                     </table>
                 </div>
 
-                {/* Pagination stub */}
                 {totalPages > 1 && (
-                    <div className="p-4 border-t flex justify-end gap-2" style={{ borderColor: 'var(--border)' }}>
-                        <button className="btn btn-ghost" disabled={page === 0} onClick={() => setPage(page - 1)}>Anterior</button>
-                        <span className="px-4 py-2 text-sm">Página {page + 1} de {totalPages}</span>
-                        <button className="btn btn-ghost" disabled={page >= totalPages - 1} onClick={() => setPage(page + 1)}>Siguiente</button>
-                    </div>
+                    <Pagination page={page} totalPages={totalPages} setPage={setPage} />
                 )}
             </div>
         </div>
