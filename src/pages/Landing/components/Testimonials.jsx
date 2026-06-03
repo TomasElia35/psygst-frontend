@@ -3,8 +3,8 @@ import { Star } from 'lucide-react';
 
 const testimonials = [
     {
-        name: 'Dra. Valeria Moreno',
-        role: 'Psicóloga Clínica · CABA',
+        name: 'Lic. Maria Soledad Gimenez',
+        role: 'Psicóloga · Mar del Plata',
         avatar: 'VM',
         color: '#2064C6',
         text: 'Desde que uso Psygst dejé de preocuparme por los pagos y las ausencias. Los recordatorios automáticos por WhatsApp redujeron mis "no-shows" casi a cero.',
