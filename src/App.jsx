@@ -22,6 +22,13 @@ function ProtectedRoute({ children }) {
     return isAuthenticated ? children : <Navigate to="/login" replace />;
 }
 
+function AdminRoute({ children }) {
+    const { isAuthenticated, user } = useAuth();
+    if (!isAuthenticated) return <Navigate to="/login" replace />;
+    if (user?.rol !== 'ROLE_ADMIN') return <Navigate to="/dashboard" replace />;
+    return children;
+}
+
 function App() {
     // If maintenance mode is active, show only the maintenance screen
     if (MAINTENANCE_MODE) {
@@ -33,7 +40,6 @@ function App() {
             <ErrorBoundary>
                 <Routes>
                     <Route path="/login" element={<Login />} />
-                    <Route path="/registro" element={<Registro />} />
                     <Route path="/" element={<Landing />} />
                     <Route element={
                         <ProtectedRoute>
@@ -41,6 +47,11 @@ function App() {
                         </ProtectedRoute>
                     }>
                         <Route path="/dashboard" element={<Dashboard />} />
+                        <Route path="/registro" element={
+                            <AdminRoute>
+                                <Registro />
+                            </AdminRoute>
+                        } />
                         <Route path="/agenda" element={<Agenda />} />
                         <Route path="/pacientes" element={<Pacientes />} />
                         <Route path="/pacientes/:uuid" element={<FichaPaciente />} />

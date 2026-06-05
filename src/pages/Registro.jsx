@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api/axios';
 import toast from 'react-hot-toast';
-
-const API_URL = import.meta.env.VITE_API_URL || '/api/v1';
 
 export default function Registro() {
     const [roles, setRoles] = useState([]);
@@ -20,7 +18,7 @@ export default function Registro() {
     const navigate = useNavigate();
 
     useEffect(() => {
-        axios.get(`${API_URL}/roles`)
+        api.get('/roles')
             .then(res => {
                 setRoles(res.data);
                 if (res.data.length > 0) {
@@ -40,9 +38,18 @@ export default function Registro() {
         e.preventDefault();
         setLoading(true);
         try {
-            await axios.post(`${API_URL}/auth/register`, formData);
-            toast.success('Usuario registrado exitosamente. Ya puedes iniciar sesión.');
-            navigate('/login');
+            await api.post('/auth/register', formData);
+            toast.success('Colega registrado exitosamente.');
+            // Reset form
+            setFormData({
+                username: '',
+                password: '',
+                idRol: formData.idRol,
+                nombre: '',
+                apellido: '',
+                email: '',
+                celular: ''
+            });
         } catch (error) {
             toast.error(error.response?.data?.message || 'Error al registrar el usuario');
         } finally {
@@ -51,11 +58,11 @@ export default function Registro() {
     };
 
     return (
-        <div className="login-container">
-            <div className="login-box" style={{ maxWidth: '500px' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh' }}>
+            <div className="login-box" style={{ maxWidth: '500px', width: '100%' }}>
                 <div className="login-header">
-                    <h1>PsyGst</h1>
-                    <p>Registro de nuevo profesional</p>
+                    <h1 style={{ fontSize: '24px' }}>Nuevo Colega</h1>
+                    <p>Registrar a un nuevo profesional o administrador</p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="login-form">
@@ -107,10 +114,6 @@ export default function Registro() {
                         {loading ? 'Registrando...' : 'Crear Cuenta'}
                     </button>
                 </form>
-
-                <div className="login-footer">
-                    <p>¿Ya tienes cuenta? <Link to="/login">Inicia sesión</Link></p>
-                </div>
             </div>
         </div>
     );
