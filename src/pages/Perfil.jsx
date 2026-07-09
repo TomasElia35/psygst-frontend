@@ -96,13 +96,23 @@ export default function Perfil() {
     const handlePasswordSubmit = async (e) => {
         e.preventDefault();
         
-        if (passwordData.newPassword !== passwordData.confirmPassword) {
-            toast.error("Las contraseñas nuevas no coinciden");
+        if (!passwordData.oldPassword) {
+            toast.error("Ingresá tu contraseña actual");
             return;
         }
 
-        if (passwordData.newPassword.length < 6) {
-            toast.error("La contraseña debe tener al menos 6 caracteres");
+        if (passwordData.newPassword.length < 8) {
+            toast.error("La contraseña nueva debe tener al menos 8 caracteres");
+            return;
+        }
+
+        if (passwordData.newPassword === passwordData.oldPassword) {
+            toast.error("La contraseña nueva debe ser diferente a la actual");
+            return;
+        }
+
+        if (passwordData.newPassword !== passwordData.confirmPassword) {
+            toast.error("Las contraseñas nuevas no coinciden");
             return;
         }
 

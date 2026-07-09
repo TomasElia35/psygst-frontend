@@ -13,6 +13,7 @@ export function AuthProvider({ children }) {
         const { data } = await api.post('/auth/login', { username, password });
         localStorage.setItem('psygst_token', data.token);
         localStorage.setItem('psygst_user', JSON.stringify(data));
+        api.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
         setUser(data);
         return data;
     }, []);

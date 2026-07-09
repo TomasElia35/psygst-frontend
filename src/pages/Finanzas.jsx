@@ -14,9 +14,11 @@ function PagoModal({ pago, onClose, onConfirm }) {
 
     const handleConfirm = async () => {
         setIsSubmitting(true);
-        // Enviamos la moneda y cotización originales solo por consistencia, aunque no cambian
-        await onConfirm(pago.uuid, metodo, pago.moneda, pago.cotizacion);
-        setIsSubmitting(false);
+        try {
+            await onConfirm(pago.uuid, metodo, pago.moneda, pago.cotizacion);
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const montoOriginal = parseFloat(pago.monto);
@@ -313,7 +315,7 @@ export default function Finanzas() {
                             <div>
                                 <h2 className="text-lg font-bold">Historial de Cobros</h2>
                                 <p className="text-xs text-muted" style={{ marginTop: 2 }}>
-                                    Ordernado por fecha de turno
+                                    Ordenado por fecha de turno
                                 </p>
                             </div>
                             <form onSubmit={handleSearch} className="search-bar w-auto">

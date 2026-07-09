@@ -1,43 +1,95 @@
 /* ============================================================
-   PsyGst — Design System: Premium Dark Theme
-   Primary: Electric Blue #3B82F6 | Background: Deep Navy #0A0F1E
+   PsyGst — Design System: Auto Theme (OS preference)
+   Dark  → original blue palette
+   Light → warm beige palette
    ============================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
+/* ── Base (theme-neutral) ──────────────────────────────────── */
 :root {
-  --bg-primary: #0A0F1E;
-  --bg-secondary: #0D1526;
-  --bg-card: #111827;
-  --bg-card-hover: #1A2236;
-  --bg-sidebar: #080C18;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+
+/* ── Dark Theme (blue) ─────────────────────────────────────── */
+[data-theme="dark"] {
+  --bg-primary: #0F172A;
+  --bg-secondary: #111827;
+  --bg-card: #1E293B;
+  --bg-card-hover: #263348;
+  --bg-sidebar: #0B1120;
+  --bg-disabled: rgba(255, 255, 255, 0.03);
+  --bg-card-glass: rgba(15, 23, 42, 0.85);
+  --bg-off-range: rgba(0, 0, 0, 0.15);
 
   --accent: #3B82F6;
   --accent-hover: #2563EB;
-  --accent-glow: rgba(59, 130, 246, 0.15);
-  --accent-subtle: rgba(59, 130, 246, 0.08);
+  --accent-glow: rgba(59, 130, 246, 0.18);
+  --accent-subtle: rgba(59, 130, 246, 0.10);
 
   --success: #10B981;
-  --success-bg: rgba(16, 185, 129, 0.1);
+  --success-bg: rgba(16, 185, 129, 0.12);
   --warning: #F59E0B;
-  --warning-bg: rgba(245, 158, 11, 0.1);
+  --warning-bg: rgba(245, 158, 11, 0.12);
   --danger: #EF4444;
-  --danger-bg: rgba(239, 68, 68, 0.1);
+  --danger-bg: rgba(239, 68, 68, 0.12);
   --virtual-color: #10B981;
   --presencial-color: #3B82F6;
   --cancelado-color: #EF4444;
 
-  --text-primary: #F9FAFB;
-  --text-secondary: #9CA3AF;
-  --text-muted: #4B5563;
+  --text-primary: #F1F5F9;
+  --text-secondary: #94A3B8;
+  --text-muted: #475569;
 
-  --border: rgba(255, 255, 255, 0.07);
-  --border-accent: rgba(59, 130, 246, 0.3);
+  --border: rgba(148, 163, 184, 0.12);
+  --border-accent: rgba(59, 130, 246, 0.38);
 
-  --radius: 12px;
-  --radius-sm: 8px;
-  --shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
-  --shadow-accent: 0 4px 24px rgba(59, 130, 246, 0.2);
+  --shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+  --shadow-accent: 0 4px 24px rgba(59, 130, 246, 0.28);
+
+  --gradient-title: linear-gradient(135deg, #60A5FA, #3B82F6);
+  --login-glow-color: rgba(59, 130, 246, 0.18);
+}
+
+/* ── Light Theme (warm beige) ──────────────────────────────── */
+[data-theme="light"] {
+  --bg-primary: #FAF7F2;
+  --bg-secondary: #F5EFE6;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #FDF8F3;
+  --bg-sidebar: #EDE3D6;
+  --bg-disabled: rgba(0, 0, 0, 0.04);
+  --bg-card-glass: rgba(250, 247, 242, 0.92);
+  --bg-off-range: rgba(155, 107, 71, 0.05);
+
+  --accent: #9B6B47;
+  --accent-hover: #7A5238;
+  --accent-glow: rgba(155, 107, 71, 0.15);
+  --accent-subtle: rgba(155, 107, 71, 0.08);
+
+  --success: #16A34A;
+  --success-bg: rgba(22, 163, 74, 0.10);
+  --warning: #D97706;
+  --warning-bg: rgba(217, 119, 6, 0.10);
+  --danger: #DC2626;
+  --danger-bg: rgba(220, 38, 38, 0.10);
+  --virtual-color: #16A34A;
+  --presencial-color: #9B6B47;
+  --cancelado-color: #DC2626;
+
+  --text-primary: #2C1810;
+  --text-secondary: #7C5C48;
+  --text-muted: #B89880;
+
+  --border: rgba(155, 107, 71, 0.18);
+  --border-accent: rgba(155, 107, 71, 0.40);
+
+  --shadow: 0 4px 24px rgba(100, 60, 30, 0.12);
+  --shadow-accent: 0 4px 24px rgba(155, 107, 71, 0.22);
+
+  --gradient-title: linear-gradient(135deg, #C09070, #9B6B47);
+  --login-glow-color: rgba(155, 107, 71, 0.15);
 }
 
 * {
@@ -104,7 +156,7 @@ html, body {
   font-size: 20px;
   font-weight: 800;
   letter-spacing: -0.5px;
-  background: linear-gradient(135deg, #3B82F6, #8B5CF6);
+  background: var(--gradient-title);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -176,7 +228,7 @@ html, body {
 }
 
 .card-glass {
-  background: rgba(17, 24, 39, 0.8);
+  background: var(--bg-card-glass);
   backdrop-filter: blur(16px);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -251,12 +303,12 @@ html, body {
 .btn-primary {
   background: var(--accent);
   color: white;
-  box-shadow: 0 2px 12px rgba(59, 130, 246, 0.3);
+  box-shadow: var(--shadow-accent);
 }
 
 .btn-primary:hover {
   background: var(--accent-hover);
-  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+  box-shadow: var(--shadow-accent);
   transform: translateY(-1px);
 }
 
@@ -352,7 +404,7 @@ html, body {
 .form-group input:disabled,
 .form-group select:disabled,
 .form-group textarea:disabled {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--bg-disabled);
   color: var(--text-muted);
   cursor: not-allowed;
   border-color: transparent;
@@ -498,30 +550,227 @@ tbody td {
   border-top: 1px solid var(--border);
 }
 
-/* ── Calendar ──────────────────────────────────────────────── */
-.fc {
-  --fc-border-color: var(--border);
-  --fc-page-bg-color: transparent;
-  --fc-neutral-bg-color: var(--bg-secondary);
-  --fc-list-event-hover-bg-color: var(--bg-card-hover);
-  --fc-button-bg-color: var(--bg-card);
-  --fc-button-border-color: var(--border);
-  --fc-button-hover-bg-color: var(--bg-card-hover);
-  --fc-button-active-bg-color: var(--accent);
-  --fc-today-bg-color: var(--accent-subtle);
-  --fc-event-border-color: transparent;
-  font-family: 'Inter', sans-serif;
+/* ── React Big Calendar ────────────────────────────────────── */
+.rbc-wrapper {
+  border-radius: var(--radius);
+  overflow: hidden;
 }
 
-.fc-toolbar-title { font-size: 16px !important; font-weight: 700 !important; }
-.fc th { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); }
-.fc-timegrid-event .fc-event-title { font-size: 12px; font-weight: 600; }
-.fc .fc-button { border-radius: var(--radius-sm) !important; font-size: 12px !important; font-weight: 600 !important; }
-/* Ensure the view harness always fills the allocated height */
-.fc .fc-view-harness { min-height: 600px; }
-/* Ensure timegrid slot rows have a minimum height so events render */
-.fc .fc-timegrid-slot { height: 40px !important; }
-.fc-timegrid-event { min-height: 20px !important; }
+.rbc-calendar {
+  font-family: 'Inter', sans-serif;
+  color: var(--text-primary);
+  background: transparent;
+}
+
+/* Toolbar */
+.rbc-toolbar {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0;
+  flex-wrap: wrap;
+  gap: 10px;
+  background: var(--bg-secondary);
+}
+
+.rbc-toolbar .rbc-toolbar-label {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
+  text-transform: capitalize;
+}
+
+.rbc-btn-group {
+  display: flex;
+  gap: 4px;
+}
+
+.rbc-toolbar button {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-sm) !important;
+  color: var(--text-secondary) !important;
+  padding: 6px 14px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  font-family: 'Inter', sans-serif !important;
+  cursor: pointer;
+  transition: all 0.2s;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.rbc-toolbar button:hover {
+  background: var(--bg-card-hover) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-accent) !important;
+}
+
+.rbc-toolbar button.rbc-active,
+.rbc-toolbar button.rbc-active:hover {
+  background: var(--accent-glow) !important;
+  color: var(--accent) !important;
+  border-color: var(--border-accent) !important;
+}
+
+/* Headers (day names) */
+.rbc-header {
+  padding: 10px 8px;
+  font-size: 11px !important;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border) !important;
+  border-left: 1px solid var(--border) !important;
+  background: var(--bg-secondary);
+}
+
+.rbc-header:first-child { border-left: none !important; }
+
+.rbc-header a,
+.rbc-header a:visited {
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+/* Time gutter labels */
+.rbc-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  padding: 0 10px;
+  font-weight: 500;
+}
+
+/* Time grid */
+.rbc-time-view {
+  border: none !important;
+  background: var(--bg-card);
+}
+
+.rbc-time-header {
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.rbc-time-header-content {
+  border-left: 1px solid var(--border) !important;
+}
+
+.rbc-time-content {
+  border-top: 1px solid var(--border) !important;
+  overflow-y: auto;
+}
+
+.rbc-time-content > * + * > * {
+  border-left: 1px solid var(--border) !important;
+}
+
+.rbc-timeslot-group {
+  border-bottom: 1px solid var(--border) !important;
+  min-height: 40px;
+}
+
+.rbc-time-slot {
+  border-top: none !important;
+}
+
+.rbc-time-gutter .rbc-timeslot-group {
+  background: var(--bg-secondary);
+}
+
+/* Day columns */
+.rbc-day-bg + .rbc-day-bg {
+  border-left: 1px solid var(--border) !important;
+}
+
+.rbc-today {
+  background: var(--accent-subtle) !important;
+}
+
+/* Current time indicator */
+.rbc-current-time-indicator {
+  background: var(--accent);
+  height: 2px;
+  opacity: 0.85;
+}
+
+/* Events */
+.rbc-event {
+  border-radius: 6px !important;
+  border: none !important;
+  padding: 3px 8px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.35) !important;
+  transition: opacity 0.15s, transform 0.15s;
+  outline: none !important;
+}
+
+.rbc-event:hover {
+  opacity: 0.88;
+  transform: translateY(-1px);
+}
+
+.rbc-event:focus {
+  box-shadow: 0 0 0 2px var(--accent-glow) !important;
+}
+
+.rbc-event-label {
+  font-size: 10px !important;
+  opacity: 0.85;
+  margin-bottom: 1px;
+}
+
+.rbc-event-content {
+  font-size: 12px !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Slot selection highlight */
+.rbc-slot-selection {
+  background: var(--accent-glow) !important;
+  border: 1px solid var(--border-accent) !important;
+  color: var(--accent) !important;
+  font-size: 12px;
+}
+
+.rbc-selected-cell {
+  background: var(--accent-subtle) !important;
+}
+
+/* Off-range days */
+.rbc-off-range-bg {
+  background: var(--bg-off-range) !important;
+}
+
+/* Popup (more events) */
+.rbc-overlay {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-accent) !important;
+  border-radius: var(--radius-sm) !important;
+  box-shadow: var(--shadow) !important;
+  padding: 8px !important;
+}
+
+.rbc-overlay-header {
+  border-bottom: 1px solid var(--border) !important;
+  padding-bottom: 8px !important;
+  margin-bottom: 4px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: var(--text-secondary) !important;
+}
+
+/* Legend dot */
+.legend-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
 
 /* ── Tabs ──────────────────────────────────────────────────── */
 .tabs {
@@ -585,7 +834,7 @@ tbody td {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(ellipse 80% 80% at 50% -20%, rgba(59,130,246,0.15) 0%, var(--bg-primary) 60%);
+  background: radial-gradient(ellipse 80% 80% at 50% -20%, var(--login-glow-color) 0%, var(--bg-primary) 60%);
   position: absolute;
   top: 0;
   left: 0;
@@ -605,7 +854,7 @@ tbody td {
 .login-card h1, .login-header h1 {
   font-size: 28px;
   font-weight: 800;
-  background: linear-gradient(135deg, #3B82F6, #8B5CF6);
+  background: var(--gradient-title);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

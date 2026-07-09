@@ -35,12 +35,13 @@ export default function NuevoTurnoModal({ onClose, selectedSlot, selectedEvent, 
     const handleFetchCotizacion = async () => {
         try {
             const res = await fetch('https://api.bluelytics.com.ar/v2/latest');
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data = await res.json();
             let newCotizacion = '';
             if (formData.moneda === 'USD') {
-                newCotizacion = data.blue.value_avg;
+                newCotizacion = data?.blue?.value_avg;
             } else if (formData.moneda === 'EUR') {
-                newCotizacion = data.blue_euro.value_avg;
+                newCotizacion = data?.blue_euro?.value_avg;
             }
             if (newCotizacion) {
                 setFormData({ ...formData, cotizacion: newCotizacion });
@@ -98,8 +99,14 @@ export default function NuevoTurnoModal({ onClose, selectedSlot, selectedEvent, 
     };
 
     const handleCancelarTurno = async () => {
-        const [year, month, day] = selectedEvent.fecha.split('-').map(Number);
-        const [hour, minute] = selectedEvent.horaComienzo.split(':').map(Number);
+        const fechaParts = selectedEvent.fecha?.split('-').map(Number);
+        const horaParts = selectedEvent.horaComienzo?.split(':').map(Number);
+        if (!fechaParts || fechaParts.length < 3 || !horaParts || horaParts.length < 2) {
+            toast.error('Datos del turno inválidos para calcular la diferencia horaria.');
+            return;
+        }
+        const [year, month, day] = fechaParts;
+        const [hour, minute] = horaParts;
         const turnoDate = new Date(year, month - 1, day, hour, minute);
         const now = new Date();
         const difHs = (turnoDate - now) / (1000 * 60 * 60);

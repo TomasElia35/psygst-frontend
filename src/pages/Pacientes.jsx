@@ -11,21 +11,29 @@ export default function Pacientes() {
     const [searchTerm, setSearchTerm] = useState('');
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
+    const [isError, setIsError] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
+        const controller = new AbortController();
         const timer = setTimeout(() => {
-            fetchPacientes();
-        }, 300); // debounce search
-        return () => clearTimeout(timer);
+            fetchPacientes(controller.signal);
+        }, 300);
+        return () => { clearTimeout(timer); controller.abort(); };
     }, [searchTerm, page]);
 
-    const fetchPacientes = async () => {
+    const fetchPacientes = async (signal) => {
         try {
-            const { data } = await api.get(`/pacientes?page=${page}&size=20${searchTerm ? `&q=${searchTerm}` : ''}`);
+            setIsError(false);
+            const { data } = await api.get(
+                `/pacientes?page=${page}&size=20${searchTerm ? `&q=${searchTerm}` : ''}`,
+                { signal }
+            );
             setPacientes(data.content);
             setTotalPages(data.totalPages);
         } catch (error) {
+            if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') return;
+            setIsError(true);
             toast.error('Error al cargar pacientes');
         }
     };
@@ -71,14 +79,28 @@ export default function Pacientes() {
                             </tr>
                         </thead>
                         <tbody>
-                            {pacientes.length === 0 ? (
+                            {isError ? (
+                                <tr>
+                                    <td colSpan="4" className="p-0 border-b-0">
+                                        <div className="p-8 text-center">
+                                            <p className="text-[var(--danger)] mb-3">Error al cargar pacientes.</p>
+                                            <button
+                                                className="btn btn-ghost text-sm"
+                                                onClick={() => fetchPacientes()}
+                                            >
+                                                Reintentar
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ) : pacientes.length === 0 ? (
                                 <tr>
                                     <td colSpan="4" className="p-0 border-b-0">
                                         <div className="p-8">
-                                            <EmptyState 
-                                                icon={Users} 
-                                                title="No hay pacientes" 
-                                                description="No se encontraron pacientes que coincidan con la búsqueda." 
+                                            <EmptyState
+                                                icon={Users}
+                                                title="No hay pacientes"
+                                                description="No se encontraron pacientes que coincidan con la búsqueda."
                                             />
                                         </div>
                                     </td>
@@ -117,7 +139,7 @@ export default function Pacientes() {
                                     </tr>
                                 ))
                             )}
-                        </tbody>
+                            </tbody>
                     </table>
                 </div>
 

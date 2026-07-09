@@ -49,9 +49,10 @@ export default function FichaPaciente() {
                 api.get('/motivos')
             ]);
             setObrasSociales(osRes.data);
-            setMotivosBaja(motRes.data);
-            // Set default motivo once loaded
-            if (motRes.data.length > 0) setSelectedMotivoBaja(motRes.data[0].idMotivo);
+            if (motRes.data && motRes.data.length > 0) {
+                setMotivosBaja(motRes.data);
+                setSelectedMotivoBaja(motRes.data[0].idMotivo);
+            }
         } catch (err) {
             console.error('Error cargando catálogos', err);
         }
@@ -141,7 +142,9 @@ export default function FichaPaciente() {
         if (!nuevaNota.trim()) return;
         try {
             setIsSubmitting(true);
-            const resumen = nuevaNota.substring(0, 50) + '...';
+            const resumen = nuevaNota.length > 120
+                ? nuevaNota.substring(0, 120).trimEnd() + '...'
+                : nuevaNota;
             await api.post('/historia-clinica', {
                 pacienteUuid: uuid,
                 contenido: nuevaNota,

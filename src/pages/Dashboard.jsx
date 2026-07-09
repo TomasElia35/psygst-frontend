@@ -40,29 +40,28 @@ export default function Dashboard() {
             const currentMonth = d.getMonth() + 1;
             const currentYear = d.getFullYear();
 
-            const [turnosRes, pacientesRes, pagosPendientesRes, pagosPagadosRes] = await Promise.all([
+            const [turnosRes, pacientesRes, pagosPendientesRes, pagosPagadosRes] = await Promise.allSettled([
                 api.get(`/turnos/semana?fechaInicio=${today}`),
                 api.get('/pacientes?size=1'),
                 api.get('/pagos/pendientes'),
                 api.get('/pagos/pagados')
             ]);
 
-            const todosTurnos = turnosRes.data || [];
-            const turnosDelDia = todosTurnos.filter(t => normalizeFechaString(t.fecha) === today && t.estado !== ESTADOS_TURNO.CANCELADO);
+            const todosTurnos = turnosRes.status === 'fulfilled' ? (turnosRes.value.data || []) : [];
+            const turnosDelDia = todosTurnos
+                .filter(t => normalizeFechaString(t.fecha) === today && t.estado !== ESTADOS_TURNO.CANCELADO)
+                .map(t => ({
+                    ...t,
+                    fecha: normalizeFechaString(t.fecha),
+                    horaComienzo: normalizeTimeString(t.horaComienzo).substring(0, 5),
+                    horaFin: normalizeTimeString(t.horaFin).substring(0, 5),
+                }));
             setTurnosHoy(turnosDelDia);
 
-            // Normalize turno data for display
-            const turnosDelDiaNormalized = turnosDelDia.map(t => ({
-                ...t,
-                fecha: normalizeFechaString(t.fecha),
-                horaComienzo: normalizeTimeString(t.horaComienzo).substring(0, 5),
-                horaFin: normalizeTimeString(t.horaFin).substring(0, 5),
-            }));
-            setTurnosHoy(turnosDelDiaNormalized);
-
             let mesSuma = 0;
-            const pagosPagadosData = Array.isArray(pagosPagadosRes.data) ? pagosPagadosRes.data : (pagosPagadosRes.data?.content || []);
-            
+            const pagosPagadosRaw = pagosPagadosRes.status === 'fulfilled' ? pagosPagadosRes.value.data : null;
+            const pagosPagadosData = Array.isArray(pagosPagadosRaw) ? pagosPagadosRaw : (pagosPagadosRaw?.content || []);
+
             if (pagosPagadosData.length > 0) {
                 const pagosMes = pagosPagadosData.filter(p => {
                     if (!p.fechaPago) return false;
@@ -77,11 +76,14 @@ export default function Dashboard() {
                 mesSuma = pagosMes.reduce((acc, p) => acc + (parseFloat(p.monto) || 0), 0);
             }
 
+            const pacientesData = pacientesRes.status === 'fulfilled' ? pacientesRes.value.data : null;
+            const pagosPendientesData = pagosPendientesRes.status === 'fulfilled' ? pagosPendientesRes.value.data : null;
+
             setStats({
                 turnosHoy: turnosDelDia.length,
-                pacientesActivos: pacientesRes.data?.totalElements || 0,
+                pacientesActivos: pacientesData?.totalElements || 0,
                 ingresosMes: mesSuma,
-                pagosPendientes: pagosPendientesRes.data?.length || 0
+                pagosPendientes: pagosPendientesData?.length || 0
             });
 
         } catch (error) {
