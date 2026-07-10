@@ -28,13 +28,38 @@ const messages = {
     showMore: (total) => `+${total} más`,
 };
 
+// Detecta pantallas chicas (celular) para elegir la vista por defecto.
+function useIsMobile(breakpoint = 768) {
+    const [isMobile, setIsMobile] = useState(
+        () => typeof window !== 'undefined' && window.innerWidth < breakpoint
+    );
+    useEffect(() => {
+        const onResize = () => setIsMobile(window.innerWidth < breakpoint);
+        window.addEventListener('resize', onResize);
+        return () => window.removeEventListener('resize', onResize);
+    }, [breakpoint]);
+    return isMobile;
+}
+
+const isSameDay = (a, b) =>
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate();
+
 export default function Agenda() {
+    const isMobile = useIsMobile();
     const [events, setEvents] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedSlot, setSelectedSlot] = useState(null);
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [currentDate, setCurrentDate] = useState(new Date());
-    const [view, setView] = useState(Views.WEEK);
+    // En celular arranca en vista DÍA (columna full-width → se leen los nombres).
+    const [view, setView] = useState(isMobile ? Views.DAY : Views.WEEK);
+
+    // Al cruzar el breakpoint (rotar / redimensionar), ajusta la vista.
+    useEffect(() => {
+        setView(isMobile ? Views.DAY : Views.WEEK);
+    }, [isMobile]);
 
     useEffect(() => {
         let isMounted = true;
@@ -113,6 +138,20 @@ export default function Agenda() {
         setIsModalOpen(true);
     };
 
+    // Elegir un día en el date picker → abre ese día en vista DÍA.
+    const handlePickDate = (e) => {
+        if (!e.target.value) return;
+        const [y, m, d] = e.target.value.split('-').map(Number);
+        setCurrentDate(new Date(y, m - 1, d));
+        setView(Views.DAY);
+    };
+
+    // Tocar el encabezado de un día (en vista semana) → entra a ese día.
+    const handleDrillDown = (date) => {
+        setCurrentDate(date);
+        setView(Views.DAY);
+    };
+
     const eventPropGetter = (event) => ({
         style: {
             backgroundColor: event.color,
@@ -135,25 +174,47 @@ export default function Agenda() {
         return {};
     };
 
+    // Resalta la columna del día actual.
+    const dayPropGetter = (date) => {
+        if (isSameDay(date, new Date())) {
+            return { style: { backgroundColor: 'rgba(99, 102, 241, 0.10)' } };
+        }
+        return {};
+    };
+
     return (
         <div className="h-full flex-col">
-            <div className="page-header">
+            <div className="page-header agenda-header">
                 <div>
-                    <h1 className="page-title">Agenda Semanal</h1>
-                    <p className="page-subtitle">Gestioná tus turnos y horarios disponibles</p>
+                    <h1 className="page-title">Agenda</h1>
+                    <p className="page-subtitle">
+                        {view === Views.DAY ? 'Vista por día' : 'Vista semanal'} — gestioná tus turnos
+                    </p>
                 </div>
-                <div className="flex gap-4 items-center">
-                    <div className="flex items-center gap-2 text-sm text-muted">
-                        <span className="legend-dot" style={{ background: 'var(--presencial-color)' }}></span>
-                        Presencial
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-muted">
-                        <span className="legend-dot" style={{ background: 'var(--virtual-color)' }}></span>
-                        Virtual
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-muted">
-                        <span className="legend-dot" style={{ background: 'var(--cancelado-color)' }}></span>
-                        Cancelado
+                <div className="agenda-actions flex gap-3 items-center">
+                    {/* Selector de día: abre ese día en vista DÍA */}
+                    <label className="agenda-datepick flex items-center gap-2 text-sm">
+                        <span className="text-muted hide-mobile">Ir al día:</span>
+                        <input
+                            type="date"
+                            value={format(currentDate, 'yyyy-MM-dd')}
+                            onChange={handlePickDate}
+                            className="agenda-date-input"
+                        />
+                    </label>
+                    <div className="agenda-legend flex items-center gap-3 hide-mobile">
+                        <span className="flex items-center gap-1 text-sm text-muted">
+                            <span className="legend-dot" style={{ background: 'var(--presencial-color)' }}></span>
+                            Presencial
+                        </span>
+                        <span className="flex items-center gap-1 text-sm text-muted">
+                            <span className="legend-dot" style={{ background: 'var(--virtual-color)' }}></span>
+                            Virtual
+                        </span>
+                        <span className="flex items-center gap-1 text-sm text-muted">
+                            <span className="legend-dot" style={{ background: 'var(--cancelado-color)' }}></span>
+                            Cancelado
+                        </span>
                     </div>
                     <button
                         className="btn btn-primary"
@@ -164,24 +225,27 @@ export default function Agenda() {
                 </div>
             </div>
 
-            <div className="card rbc-wrapper" style={{ padding: 0, overflow: 'hidden', minHeight: 720 }}>
+            <div className="card rbc-wrapper" style={{ padding: 0, overflow: 'hidden', minHeight: 640 }}>
                 <Calendar
                     localizer={localizer}
                     culture="es"
                     events={events}
                     startAccessor="start"
                     endAccessor="end"
-                    style={{ height: 720 }}
+                    style={{ height: 680 }}
                     views={[Views.WEEK, Views.DAY]}
                     view={view}
                     onView={setView}
                     date={currentDate}
                     onNavigate={setCurrentDate}
+                    drilldownView={Views.DAY}
+                    onDrillDown={handleDrillDown}
                     selectable
                     onSelectSlot={handleSelectSlot}
                     onSelectEvent={handleSelectEvent}
                     eventPropGetter={eventPropGetter}
                     slotPropGetter={slotPropGetter}
+                    dayPropGetter={dayPropGetter}
                     min={new Date(0, 0, 0, 8, 0)}
                     max={new Date(0, 0, 0, 21, 0)}
                     step={30}

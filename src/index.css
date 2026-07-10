@@ -979,3 +979,36 @@ tbody td {
 .empty-state svg { margin-bottom: 16px; opacity: 0.3; }
 .empty-state p { font-size: 14px; }
 
+/* ── Agenda: selector de día + responsive ──────────────────── */
+.agenda-actions { flex-wrap: wrap; }
+
+.agenda-date-input {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  padding: 6px 10px;
+  font-size: 13px;
+  font-family: inherit;
+}
+.agenda-date-input::-webkit-calendar-picker-indicator { filter: invert(0.6); cursor: pointer; }
+
+.hide-mobile { display: flex; }
+
+@media (max-width: 768px) {
+  .hide-mobile { display: none !important; }
+
+  .agenda-header { gap: 12px; }
+  .agenda-actions { width: 100%; justify-content: space-between; }
+  .agenda-datepick { flex: 1; }
+  .agenda-date-input { width: 100%; }
+
+  /* Toolbar del calendario más compacta en celular */
+  .rbc-toolbar { padding: 10px 12px; gap: 8px; }
+  .rbc-toolbar .rbc-toolbar-label { font-size: 13px; }
+  .rbc-toolbar button { padding: 5px 10px !important; font-size: 12px; }
+
+  /* En vista día los nombres se ven completos */
+  .rbc-event-content { font-size: 12px; white-space: normal; }
+}
+
